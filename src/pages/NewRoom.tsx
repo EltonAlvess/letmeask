@@ -1,11 +1,12 @@
 import { Link } from "react-router-dom";
-
 import illustrationImg from "../assets/images/illustration.svg";
 import logoImg from "../assets/images/logo.svg";
 import "../styles/auth.scss";
 import { Button } from "../components/Button";
 
 export function NewRoom() {
+  //  const { user } = useAuth();
+
   return (
     <div id="page-auth">
       <aside>
@@ -22,12 +23,11 @@ export function NewRoom() {
           <h2>Create a new Room</h2>
           <form action="">
             <input type="text" placeholder="Enter with the room name" />
-            <Button type="submit">
-              Create Room
-            </Button>
+            <Button type="submit">Create Room</Button>
           </form>
           <p>
-            Do you want to enter in a existing room? <Link to="/">click here!</Link>
+            Do you want to enter in a existing room?{" "}
+            <Link to="/">click here!</Link>
           </p>
         </div>
       </main>
