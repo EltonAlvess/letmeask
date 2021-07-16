@@ -1,8 +1,5 @@
-import firebase from 'firebase';
-import { useState } from 'react';
-import { useEffect } from 'react';
-import { createContext, ReactNode } from 'react';
-import { auth } from '../services/firebase';
+import { createContext, ReactNode, useEffect, useState } from "react";
+import { auth, firebase } from "../services/firebase";
 
 type User = {
   id: string;
@@ -21,26 +18,7 @@ type AuthContextProviderProps = {
 
 export const AuthContext = createContext({} as AuthContextType);
 
-async function signInWithGoogle() {
-  const provider = new firebase.auth.GoogleAuthProvider();
-  const result = await auth.signInWithPopup(provider);
-
-  if (result.user) {
-    const { displayName, photoURL, uid } = result.user;
-
-    if (!displayName || !photoURL) {
-      throw new Error("Missing information from Google account!");
-    }
-
-    setUser({
-      id: uid,
-      name: displayName,
-      avatar: photoURL,
-    });
-  }
-}
-
-export function AuthContextProvider(props : AuthContextProviderProps){
+export function AuthContextProvider(props: AuthContextProviderProps){
   const [user, setUser] = useState<User>();
   
   useEffect(() => {
@@ -57,21 +35,37 @@ export function AuthContextProvider(props : AuthContextProviderProps){
           name: displayName,
           avatar: photoURL,
         });
-
-        return () => {
-          unsubscribe()
-        }
       }
     });
-  }, [user]);
+
+    return () => {
+      unsubscribe()
+    }
+  }, []);
+
+  async function signInWithGoogle() {
+    const provider = new firebase.auth.GoogleAuthProvider();
+    const result = await auth.signInWithPopup(provider);
+  
+    if (result.user) {
+      const { displayName, photoURL, uid } = result.user;
+  
+      if (!displayName || !photoURL) {
+        throw new Error("Missing information from Google account!");
+      }
+      
+      setUser({
+        id: uid,
+        name: displayName,
+        avatar: photoURL,
+      });
+    }
+  }
+  
   return (
     <AuthContext.Provider 
       value={{ user, signInWithGoogle }} >
         {props.children}
     </AuthContext.Provider>
   );
-}
-
-function setUser(arg0: { id: any; name: any; avatar: any; }) {
-  throw new Error('Function not implemented.');
 }
