@@ -26,8 +26,9 @@ async function handleCreateRoom(event: FormEvent){
     title: newRoom,
     authorId: user?.id
   });
-
-  history.push(`rooms/${firebaseRoom.key}`)
+  
+  console.log(firebaseRoom.key);
+  history.push(`${firebaseRoom.key}`)
 }
 
   return (
