@@ -1,21 +1,17 @@
-import { FormEvent, useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { FormEvent, useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom'
 
-import logoImg from "../assets/images/logo.svg";
+import logoImg from '../assets/images/logo.svg';
 
-import { Button } from "../components/Button";
-import { RoomCode } from "../components/RoomCode";
-import { useAuth } from "../hooks/useAuth";
-import { database } from "../services/firebase";
+import { Button } from '../components/Button';
+import { RoomCode } from '../components/RoomCode';
+import { useAuth } from '../hooks/useAuth';
+import { database } from '../services/firebase';
 
-import "../styles/room.scss";
-
-type roomParams = {
-  id: string;
-};
+import '../styles/room.scss';
 
 type FirebaseQuestions = Record<string, {
-  author:{
+  author: {
     name: string;
     avatar: string;
   }
@@ -24,33 +20,61 @@ type FirebaseQuestions = Record<string, {
   isHighlighted: boolean;
 }>
 
+type Question = {
+  id: string;
+  author: {
+    name: string;
+    avatar: string;
+  }
+  content: string;
+  isAnswered: boolean;
+  isHighlighted: boolean;
+}
+
+type RoomParams = {
+  id: string;
+}
+
 export function Room() {
-  const params = useParams<roomParams>();
   const { user } = useAuth();
-  const [newQuestion, setNewQuestion] = useState("");
+  const params = useParams<RoomParams>();
+  const [newQuestion, setNewQuestion] = useState('');
+  const [questions, setQuestions] = useState<Question[]>([])
+  const [title, setTitle] = useState('');
+
   const roomId = params.id;
 
   useEffect(() => {
     const roomRef = database.ref(`rooms/${roomId}`);
 
-    roomRef.once('value', room => {
+    roomRef.on('value', room => {
       const databaseRoom = room.val();
-      const firebaseQuestions: FirebaseQuestions = databaseRoom.questions;
-      const parsedQuestions = Object.entries(firebaseQuestions ?? {})
+      const firebaseQuestions: FirebaseQuestions = databaseRoom.questions ?? {};
 
-      
+      const parsedQuestions = Object.entries(firebaseQuestions).map(([key, value]) => {
+        return {
+          id: key,
+          content: value.content,
+          author: value.author,
+          isHighlighted: value.isHighlighted,
+          isAnswered: value.isAnswered,
+        }
+      })
+
+      setTitle(databaseRoom.title);
+      setQuestions(parsedQuestions);
     })
-  }, []);
+  }, [roomId]);
 
   async function handleSendQuestion(event: FormEvent) {
     event.preventDefault();
 
-    if (newQuestion.trim() === "") {
+    if (newQuestion.trim() === '') {
       return;
     }
 
     if (!user) {
-      throw Error("you must be logged in");
+      throw new Error('You must be logged in');
     }
 
     const question = {
@@ -60,12 +84,15 @@ export function Room() {
         avatar: user.avatar,
       },
       isHighlighted: false,
-      isAnswered: false,
+      isAnswered: false
     };
 
     await database.ref(`rooms/${roomId}/questions`).push(question);
-    setNewQuestion("");
+
+    setNewQuestion('');
+    
   }
+
 
   return (
     <div id="page-room">
@@ -77,8 +104,8 @@ export function Room() {
       </header>
       <main className="content">
         <div className="room-title">
-          <h1>React Room Title</h1>
-          <span>5 questions</span>
+          <h1>Room {title}</h1>
+          { questions.length > 0 && <span>{questions.length} question(s)</span> }
         </div>
 
         <form onSubmit={handleSendQuestion}>
@@ -104,6 +131,7 @@ export function Room() {
             </Button>
           </div>
         </form>
+        {JSON.stringify(questions)}
       </main>
     </div>
   );
